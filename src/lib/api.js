@@ -2,7 +2,7 @@
 // Camada de acesso a dados. Cada função devolve os dados JÁ no formato
 // que as suas telas usam (mesmos nomes de campo do protótipo).
 // Todos os erros voltam com mensagem em português.
-import { supabase } from "./supabase";
+import { supabase, supabaseConfigured } from "./supabase";
 
 function falhar(e, msg) {
   console.error(e);
@@ -11,6 +11,9 @@ function falhar(e, msg) {
 
 /* ============ AUTENTICAÇÃO ============ */
 export async function entrar(email, senha) {
+  if (!supabaseConfigured) {
+    throw new Error("Banco não configurado: crie o arquivo .env com VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.");
+  }
   const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
   if (error) throw new Error("E-mail ou senha inválidos.");
   return data;

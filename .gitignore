@@ -1,6 +1,10 @@
 node_modules
 dist
 .env
-.env.local
+.env.*
+!.env.example
+!.env.development.example
+!.env.production.example
 *.log
 .DS_Store
+.claude/

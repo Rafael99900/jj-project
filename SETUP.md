@@ -90,6 +90,44 @@ Regra de ouro: envolva as chamadas em `try/catch` e no catch faça `setGlobalErr
 4. Deploy. A Vercel serve o site 24h, de graça no plano inicial, e o Supabase mantém o banco no ar junto.
 5. Depois, em **Settings > Domains**, você pode apontar um domínio próprio (ex.: `comite.jj.com.br`).
 
+## 6. Fluxo de trabalho: dev (testes) x main (produção)
+
+Pra evitar testar mudança de código ou de banco direto em cima dos dados reais da campanha, use dois ambientes:
+
+**Dois projetos no Supabase**
+1. Um projeto Supabase "de produção" (dados reais, já configurado nos passos 1-3 acima).
+2. Um segundo projeto Supabase "de testes" (crie do mesmo jeito, rodando `schema.sql`/`seed.sql` nele também). Pode ser deletado e recriado sempre que quiser, sem medo.
+
+**Duas branches no git**
+- `main` = o que está em produção agora. Só recebe código já testado.
+- `dev` = onde você trabalha no dia a dia. Faça suas mudanças nela, teste, e só depois junte em `main`.
+
+Comandos básicos (rodar no terminal, dentro da pasta do projeto):
+```
+git checkout dev            # ir para a branch de testes
+# ... mexe no código, testa ...
+git add -A
+git commit -m "descreve o que mudou"
+git push                    # manda a branch dev pro GitHub
+
+# quando estiver tudo certo e quiser publicar em produção:
+git checkout main
+git merge dev
+git push                    # isso é o que atualiza o site em produção na Vercel
+```
+
+**Duas chaves locais (arquivos `.env`)**
+- `.env.development` → chaves do Supabase de testes. Usado automaticamente quando você roda `npm run dev`.
+- `.env.production` → chaves do Supabase de produção. Usado quando você roda `npm run build`.
+- Copie os arquivos `.env.development.example` e `.env.production.example` (removendo o `.example` do nome) e preencha cada um com as chaves do projeto Supabase correspondente. Nenhum dos dois vai pro GitHub (estão no `.gitignore`).
+
+**Na Vercel**
+Em **Project Settings > Environment Variables**, cadastre `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` duas vezes:
+- Marcadas como **Production** → valores do Supabase de produção (usadas só quando a branch `main` é publicada).
+- Marcadas como **Preview** → valores do Supabase de testes (usadas nas URLs de preview que a Vercel cria automaticamente para a branch `dev` e qualquer outra branch/PR).
+
+Assim, a cada `git push` na `dev`, a Vercel gera um link de preview separado pra você testar, sem mexer no site nem no banco de produção.
+
 ## Sobre downloads das tabelas
 
 Sua escolha atual (baixar CSV direto no aparelho) é a certa pra agora: funciona offline, abre no Excel e no Google Sheets, e não depende de servidor de e-mail. O caminho de "mandar link no e-mail" só compensa quando o arquivo fica grande ou quando você quer histórico de envios, e isso vira uma função de backend pra depois (o Supabase tem Storage + Edge Functions pra isso quando chegar a hora). Recomendação: mantenha o download direto e deixe o e-mail como melhoria futura.
