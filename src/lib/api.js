@@ -14,8 +14,19 @@ export async function entrar(email, senha) {
   if (!supabaseConfigured) {
     throw new Error("Banco não configurado: crie o arquivo .env com VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.");
   }
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
-  if (error) throw new Error("E-mail ou senha inválidos.");
+  let resp;
+  try {
+    resp = await supabase.auth.signInWithPassword({ email, password: senha });
+  } catch (e) {
+    console.error("Falha de rede ao contatar o Supabase:", e);
+    throw new Error("Não foi possível conectar ao servidor. Verifique sua internet e tente de novo. (" + (e?.message || "erro de rede") + ")");
+  }
+  const { data, error } = resp;
+  if (error) {
+    console.error("Erro do Supabase ao entrar:", error);
+    if (error.message === "Invalid login credentials") throw new Error("E-mail ou senha inválidos.");
+    throw new Error("Erro ao entrar: " + error.message);
+  }
   return data;
 }
 export async function sair() {
