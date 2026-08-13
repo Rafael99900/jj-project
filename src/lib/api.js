@@ -4,8 +4,13 @@
 // Todos os erros voltam com mensagem em português.
 import { supabase, supabaseConfigured } from "./supabase";
 
+function mensagemConexao(e) {
+  const texto = String(e?.message || e || "").toLowerCase();
+  return texto.includes("failed to fetch") || texto.includes("network") || texto.includes("networkerror") || texto.includes("timeout") || texto.includes("load failed");
+}
 function falhar(e, msg) {
-  console.error(e);
+  if (e) console.error(e);
+  if (mensagemConexao(e)) throw new Error("Falha de conexão com o servidor. Verifique sua internet e tente novamente.");
   throw new Error(msg || "Algo deu errado. Tente novamente.");
 }
 
@@ -19,19 +24,21 @@ export async function entrar(email, senha) {
     resp = await supabase.auth.signInWithPassword({ email, password: senha });
   } catch (e) {
     console.error("Falha de rede ao contatar o Supabase:", e);
-    throw new Error("Não foi possível conectar ao servidor. Verifique sua internet e tente de novo. (" + (e?.message || "erro de rede") + ")");
+    throw new Error("Falha de conexão com o servidor. Verifique sua internet e tente novamente.");
   }
   const { data, error } = resp;
   if (error) {
     console.error("Erro do Supabase ao entrar:", error);
     if (error.message === "Invalid login credentials") throw new Error("E-mail ou senha inválidos.");
-    throw new Error("Erro ao entrar: " + error.message);
+    if (mensagemConexao(error)) throw new Error("Falha de conexão com o servidor. Verifique sua internet e tente novamente.");
+    throw new Error("Não foi possível entrar agora. Tente novamente.");
   }
   return data;
 }
 export async function sair() {
   const { error } = await supabase.auth.signOut();
   if (error) falhar(error, "Não foi possível sair agora.");
+  _campanhaId = null; _equipes = null; _equipesPorChave = null;
 }
 export async function sessao() {
   const { data } = await supabase.auth.getSession();
@@ -45,7 +52,16 @@ let _equipes = null;
 
 export async function campanhaAtual() {
   if (_campanhaId) return _campanhaId;
-  const { data, error } = await supabase.from("campanha_membros").select("campanha_id").limit(1).maybeSingle();
+  const { data: usuario, error: erroUsuario } = await supabase.auth.getUser();
+  if (erroUsuario || !usuario?.user) falhar(erroUsuario, "Sua sessão expirou. Entre novamente.");
+  // Após restaurar a sessão, o token pode levar um instante para ficar disponível
+  // no cliente. Uma nova tentativa evita alertas falsos de campanha ausente.
+  let data, error;
+  for (let tentativa = 0; tentativa < 3; tentativa += 1) {
+    ({ data, error } = await supabase.from("campanha_membros").select("campanha_id").limit(1).maybeSingle());
+    if (data || error) break;
+    await new Promise((resolve) => setTimeout(resolve, 350));
+  }
   if (error || !data) falhar(error, "Não foi possível carregar sua campanha.");
   _campanhaId = data.campanha_id;
   return _campanhaId;
@@ -71,6 +87,7 @@ const mapPessoa = (r) => ({
   nome: r.nome,
   doc: r.documento || "",
   endereco: r.endereco || "",
+  telefone: r.telefone || "",
   perfil: r.perfil,
   funcao: r.perfil,               // seu protótipo usa funcao só pra exibir
   team: r.equipe?.chave || "sem",
@@ -98,9 +115,10 @@ export async function criarPessoa(p) {
   const { data, error } = await supabase
     .from("pessoas")
     .insert({
-      campanha_id: cid, nome: p.nome, documento: p.doc, endereco: p.endereco,
+      campanha_id: cid, nome: p.nome, documento: p.doc, endereco: p.endereco, telefone: p.telefone || null,
       perfil: p.perfil, equipe_id, exige_assinatura: p.exigeAssin,
       assinou: p.assinou ?? false, salario: p.salario || 0, data_entrada: p.entrada || null,
+      status: p.status || "ativo",
     })
     .select("*, equipe:equipes(chave,nome,cor)")
     .single();
@@ -113,6 +131,7 @@ export async function atualizarPessoa(id, p) {
   if (p.nome !== undefined) patch.nome = p.nome;
   if (p.doc !== undefined) patch.documento = p.doc;
   if (p.endereco !== undefined) patch.endereco = p.endereco;
+  if (p.telefone !== undefined) patch.telefone = p.telefone;
   if (p.perfil !== undefined) patch.perfil = p.perfil;
   if (p.team !== undefined) patch.equipe_id = await equipeIdPorChave(p.team);
   if (p.exigeAssin !== undefined) patch.exige_assinatura = p.exigeAssin;
@@ -156,13 +175,13 @@ export async function listarValores() {
   const cid = await campanhaAtual();
   const { data, error } = await supabase.from("valores").select("*").eq("campanha_id", cid).order("criado_em", { ascending: false });
   if (error) falhar(error, "Não foi possível carregar os valores.");
-  return data.map((v) => ({ id: v.id, personId: v.pessoa_id, tipo: v.tipo, valor: Number(v.valor), forma: v.forma }));
+  return data.map((v) => ({ id: v.id, personId: v.pessoa_id, tipo: v.tipo, valor: Number(v.valor), forma: v.forma, data: v.data }));
 }
 export async function adicionarValor({ personId, tipo, valor, forma }) {
   const cid = await campanhaAtual();
   const { data, error } = await supabase.from("valores").insert({ campanha_id: cid, pessoa_id: personId, tipo, valor: valor || 0, forma }).select().single();
   if (error) falhar(error, "Não foi possível salvar o valor.");
-  return { id: data.id, personId: data.pessoa_id, tipo: data.tipo, valor: Number(data.valor), forma: data.forma };
+  return { id: data.id, personId: data.pessoa_id, tipo: data.tipo, valor: Number(data.valor), forma: data.forma, data: data.data };
 }
 export async function removerValor(id) {
   const { error } = await supabase.from("valores").delete().eq("id", id);
@@ -186,17 +205,13 @@ export async function listarPresencas() {
 // marks = { pessoaId: boolean }
 export async function lancarPresenca(dataDia, marks) {
   const cid = await campanhaAtual();
-  const { data: pres, error } = await supabase.from("presencas").insert({ campanha_id: cid, data: dataDia }).select().single();
+  const marcas = Object.entries(marks).map(([pessoa_id, presente]) => ({ pessoa_id, presente: !!presente }));
+  const { data, error } = await supabase.rpc("lancar_presenca_completa", { p_campanha_id: cid, p_data: dataDia, p_marcas: marcas });
   if (error) {
     if (error.code === "23505") throw new Error("Já existe uma lista de presença nesse dia.");
     falhar(error, "Não foi possível lançar a presença.");
   }
-  const rows = Object.entries(marks).map(([pessoa_id, presente]) => ({ presenca_id: pres.id, pessoa_id, presente: !!presente }));
-  if (rows.length) {
-    const { error: e2 } = await supabase.from("presenca_marcas").insert(rows);
-    if (e2) falhar(e2, "A lista foi criada, mas houve erro ao salvar as marcações.");
-  }
-  return { id: pres.id, data: pres.data, marks };
+  return { id: data, data: dataDia, marks };
 }
 export async function removerPresenca(id) {
   const { error } = await supabase.from("presencas").delete().eq("id", id);
@@ -208,7 +223,7 @@ export async function listarPagamentos() {
   const cid = await campanhaAtual();
   const { data, error } = await supabase
     .from("pagamentos")
-    .select("id, periodo_ini, periodo_fim, total_pago, itens:pagamento_itens(pessoa_id, nome, valor, pago, pessoa:pessoas(equipe:equipes(chave)))")
+    .select("id, periodo_ini, periodo_fim, total_pago, itens:pagamento_itens(pessoa_id, nome, valor, pago, pessoa:pessoas(exige_assinatura,assinou,equipe:equipes(chave)))")
     .eq("campanha_id", cid)
     .order("registrado_em", { ascending: false });
   if (error) falhar(error, "Não foi possível carregar os pagamentos.");
@@ -217,21 +232,37 @@ export async function listarPagamentos() {
     itens: (r.itens || []).map((i) => ({
       personId: i.pessoa_id, nome: i.nome, valor: Number(i.valor), pago: i.pago,
       team: i.pessoa?.equipe?.chave || "sem",
+      assinatura: !i.pessoa?.exige_assinatura ? "" : i.pessoa?.assinou ? "Assinou" : "Não assinou",
     })),
   }));
 }
 // run = { ini, fim, totalPago, itens: [{ personId, nome, valor, pago }] }
 export async function registrarPagamento(run) {
   const cid = await campanhaAtual();
-  const { data: pg, error } = await supabase
-    .from("pagamentos")
-    .insert({ campanha_id: cid, periodo_ini: run.ini, periodo_fim: run.fim, total_pago: run.totalPago || 0 })
-    .select().single();
+  const { data, error } = await supabase.rpc("registrar_pagamento_completo", {
+    p_campanha_id: cid, p_periodo_ini: run.ini, p_periodo_fim: run.fim,
+    p_total_pago: run.totalPago || 0,
+    p_itens: run.itens.map((i) => ({ pessoa_id: i.personId, nome: i.nome, valor: i.valor || 0, pago: !!i.pago })),
+  });
   if (error) falhar(error, "Não foi possível registrar o pagamento.");
-  const itens = run.itens.map((i) => ({ pagamento_id: pg.id, pessoa_id: i.personId, nome: i.nome, valor: i.valor || 0, pago: !!i.pago }));
-  const { error: e2 } = await supabase.from("pagamento_itens").insert(itens);
-  if (e2) falhar(e2, "O pagamento foi criado, mas houve erro ao salvar os itens.");
-  return { id: pg.id, ini: run.ini, fim: run.fim, totalPago: run.totalPago, itens: run.itens };
+  return { id: data, ini: run.ini, fim: run.fim, totalPago: run.totalPago, itens: run.itens };
+}
+
+export async function assinarMudancas(aoMudar) {
+  try {
+    const cid = await campanhaAtual();
+    const canal = supabase.channel(`campanha-${cid}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "pessoas", filter: `campanha_id=eq.${cid}` }, aoMudar)
+      .on("postgres_changes", { event: "*", schema: "public", table: "valores", filter: `campanha_id=eq.${cid}` }, aoMudar)
+      .on("postgres_changes", { event: "*", schema: "public", table: "caixa_entradas", filter: `campanha_id=eq.${cid}` }, aoMudar)
+      .on("postgres_changes", { event: "*", schema: "public", table: "presencas", filter: `campanha_id=eq.${cid}` }, aoMudar)
+      .on("postgres_changes", { event: "*", schema: "public", table: "pagamentos", filter: `campanha_id=eq.${cid}` }, aoMudar)
+      .subscribe();
+    return () => supabase.removeChannel(canal);
+  } catch (e) {
+    console.warn("Sincronização em tempo real indisponível:", e);
+    return () => {};
+  }
 }
 export async function removerPagamento(id) {
   const { error } = await supabase.from("pagamentos").delete().eq("id", id);

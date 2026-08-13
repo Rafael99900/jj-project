@@ -9,9 +9,9 @@ returning id;
 --  >>> COPIE o id que apareceu e troque CAMPANHA_ID abaixo.
 
 
--- PASSO 2 — cria as cores (Sem cor é o padrão, cinza)
+-- PASSO 2 — cria as cores (Cinza é o padrão)
 insert into equipes (campanha_id, chave, nome, cor, is_padrao, ordem) values
-  ('CAMPANHA_ID','sem','Sem cor','#94A3B8', true, 0),
+  ('CAMPANHA_ID','sem','Cinza','#94A3B8', true, 0),
   ('CAMPANHA_ID','azul','Azul','#2563EB', false, 1),
   ('CAMPANHA_ID','verde','Verde','#16A34A', false, 2),
   ('CAMPANHA_ID','amarela','Amarela','#CA8A04', false, 3),

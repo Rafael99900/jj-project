@@ -1,3 +1,12 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Evita que modais e campos sejam escondidos pelo teclado virtual do celular. */
+html, body, #root { min-height: 100dvh; }
+input, select, textarea { font-size: max(16px, 1em); }
+
+/* Rolagem discreta: mantém mouse, touch, teclado e trackpad funcionando,
+   sem uma barra visual grande ocupando a interface. */
+* { scrollbar-width: none; -ms-overflow-style: none; }
+*::-webkit-scrollbar { width: 0; height: 0; display: none; }

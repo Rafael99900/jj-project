@@ -6,5 +6,7 @@ dist
 !.env.development.example
 !.env.production.example
 *.log
+qa-artifacts/
+cypress.env.json
 .DS_Store
 .claude/
