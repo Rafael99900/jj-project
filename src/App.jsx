@@ -210,7 +210,7 @@ export default function App() {
   return (
     <div style={{ ...FONT, background: G_CANVAS }} className="min-h-[100dvh] text-slate-900 flex">
       {FONTS}
-      <aside className="hidden lg:flex w-60 shrink-0 flex-col p-4" style={{ background: G_DARK }}>
+      <aside className="hidden md:flex w-60 shrink-0 flex-col p-4" style={{ background: G_DARK }}>
         <Brand light />
         <nav className="mt-6 space-y-1">
           <NavItem icon={LayoutDashboard} label="Painel" active={page === "dashboard"} onClick={() => navegar("dashboard")} />
@@ -222,13 +222,13 @@ export default function App() {
         <div className="mt-auto text-xs" style={{ color: "#8FBF9F" }}>João Jorge · 2026</div>
       </aside>
 
-      <main className="flex-1 min-w-0 min-h-[100dvh] pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-0 lg:h-screen overflow-y-auto relative flex flex-col">
-        <header className="lg:hidden sticky top-0 z-10 shrink-0 px-3 py-3 flex items-center justify-between gap-3 shadow-sm" style={{ background: G_DARK, paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}>
+      <main className="flex-1 min-w-0 min-h-[100dvh] pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0 md:h-screen overflow-y-auto relative flex flex-col">
+        <header className="md:hidden sticky top-0 z-10 shrink-0 px-3 py-3 flex items-center justify-between gap-3 shadow-sm" style={{ background: G_DARK, paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}>
           <Brand light small />
           <button data-cy="sair-sistema" onClick={sair} aria-label="Sair do sistema" className="shrink-0 flex items-center gap-1.5 text-white/90 hover:text-white text-sm font-medium transition-colors">Sair <LogOut size={16} /></button>
         </header>
 
-        <div className="hidden lg:flex justify-end p-4 shrink-0">
+        <div className="hidden md:flex justify-end p-4 shrink-0">
           <button data-cy="sair-sistema" onClick={sair} className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-red-600 transition-colors bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm">Sair do sistema <LogOut size={16} /></button>
         </div>
 
@@ -238,7 +238,7 @@ export default function App() {
           </div>
         )}
 
-        <div className="w-full p-4 lg:px-8 lg:pt-4 lg:pb-8 flex-1">
+        <div className="w-full p-4 md:px-8 md:pt-4 md:pb-8 flex-1">
           {carregando && <div className="text-center text-sm text-slate-400 py-10">Carregando dados...</div>}
           {!carregando && page === "dashboard" && <Dashboard pessoas={pessoas} ativos={ativos} valores={valores} caixa={caixa} pagamentos={pagamentos} hide={painelOculto} onToggleHide={() => setPainelOculto((atual) => { const proximo = !atual; sessionStorage.setItem("painel-valores-visiveis", proximo ? "sim" : "nao"); return proximo; })} onEditCaixa={() => setCaixaOpen(true)} onEditSaidas={() => setSaidasOpen(true)} onEquipe={() => setPage("equipe")} />}
           {!carregando && page === "valores" && <Valores valores={valores} pessoas={pessoas} onNovo={() => { setValorPerson(null); setValorOpen(true); }} onDelete={excluirValor} onError={setGlobalError} />}
@@ -248,7 +248,7 @@ export default function App() {
         </div>
       </main>
 
-      <nav aria-label="Navegação principal" className="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 grid grid-cols-5 z-20 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] pb-[env(safe-area-inset-bottom)]">
+      <nav aria-label="Navegação principal" className="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 grid grid-cols-5 z-20 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] pb-[env(safe-area-inset-bottom)]">
         <Tab icon={LayoutDashboard} label="Painel" active={page === "dashboard"} onClick={() => navegar("dashboard")} />
         <Tab icon={Coins} label="Valores" active={page === "valores"} onClick={() => navegar("valores")} />
         <Tab icon={Wallet} label="Salário" active={page === "salario"} onClick={() => navegar("salario")} />
@@ -314,7 +314,7 @@ function Dashboard({ pessoas, ativos, valores, caixa, pagamentos, hide, onToggle
   return (
     <div>
       <PageTitle title="Painel" sub="Reflete os dados gerais do sistema" />
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <button data-cy="painel-entradas" onClick={onEditCaixa} className="rounded-2xl border border-slate-200 p-3 sm:p-4 shadow-sm text-left transition-shadow hover:shadow-md" style={{ background: G_SOFT }}>
           <div className="flex items-center justify-between">
             <div className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide truncate" style={{ color: G_DARK }}>Entradas</div>
@@ -330,7 +330,7 @@ function Dashboard({ pessoas, ativos, valores, caixa, pagamentos, hide, onToggle
         <button data-cy="painel-sem-assinatura" onClick={onEquipe} className="text-left min-w-0 rounded-2xl transition-shadow hover:shadow-md"><Kpi label="Sem assinatura" value={semAssin} hint="doc do TSE" /></button>
       </div>
 
-      <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="mt-4 grid md:grid-cols-2 gap-4">
         <Card>
           <h3 className="font-semibold text-slate-800">Como o dinheiro saiu</h3>
           <p className="text-sm text-slate-500 mb-3">Cédulas, pix e outros.</p>
