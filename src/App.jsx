@@ -208,7 +208,7 @@ export default function App() {
   const abrirValor = (pid) => { setValorPerson(pid); setValorOpen(true); setPage("valores"); };
 
   return (
-    <div style={{ ...FONT, background: G_CANVAS }} className="min-h-screen text-slate-900 flex">
+    <div style={{ ...FONT, background: G_CANVAS }} className="min-h-[100dvh] text-slate-900 flex">
       {FONTS}
       <aside className="hidden md:flex w-60 shrink-0 flex-col p-4" style={{ background: G_DARK }}>
         <Brand light />
@@ -222,10 +222,10 @@ export default function App() {
         <div className="mt-auto text-xs" style={{ color: "#8FBF9F" }}>João Jorge · 2026</div>
       </aside>
 
-      <main className="flex-1 min-w-0 pb-20 md:pb-0 h-screen overflow-y-auto relative flex flex-col">
-        <header className="md:hidden sticky top-0 z-10 px-4 py-3 flex items-center justify-between shadow-sm" style={{ background: G_DARK }}>
+      <main className="flex-1 min-w-0 min-h-[100dvh] pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0 md:h-screen overflow-y-auto relative flex flex-col">
+        <header className="md:hidden sticky top-0 z-10 shrink-0 px-3 py-3 flex items-center justify-between gap-3 shadow-sm" style={{ background: G_DARK, paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}>
           <Brand light small />
-          <button data-cy="sair-sistema" onClick={sair} className="flex items-center gap-1.5 text-white/90 hover:text-white text-sm font-medium transition-colors">Sair <LogOut size={16} /></button>
+          <button data-cy="sair-sistema" onClick={sair} aria-label="Sair do sistema" className="shrink-0 flex items-center gap-1.5 text-white/90 hover:text-white text-sm font-medium transition-colors">Sair <LogOut size={16} /></button>
         </header>
 
         <div className="hidden md:flex justify-end p-4 shrink-0">
@@ -248,7 +248,7 @@ export default function App() {
         </div>
       </main>
 
-      <nav className="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 grid grid-cols-5 z-20 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+      <nav aria-label="Navegação principal" className="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 grid grid-cols-5 z-20 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] pb-[env(safe-area-inset-bottom)]">
         <Tab icon={LayoutDashboard} label="Painel" active={page === "dashboard"} onClick={() => navegar("dashboard")} />
         <Tab icon={Coins} label="Valores" active={page === "valores"} onClick={() => navegar("valores")} />
         <Tab icon={Wallet} label="Salário" active={page === "salario"} onClick={() => navegar("salario")} />
@@ -1129,10 +1129,10 @@ function ConfirmModal({ title, msg, confirmLabel = "Confirmar", cancelLabel = "S
 }
 function Field({ label, children }) { return <label className="block mb-3"><span className="text-xs sm:text-sm font-medium text-slate-700">{label}</span>{children}</label>; }
 function Avatar({ p, sm }) { const s = sm ? "h-8 w-8 sm:h-9 sm:w-9" : "h-10 w-10 sm:h-11 sm:w-11"; return <div className={`${s} rounded-full grid place-items-center text-white font-bold shrink-0 shadow-sm text-sm sm:text-base`} style={{ background: TEAMS[p.team]?.cor || "#94A3B8" }}>{p.nome?.[0]}</div>; }
-function Brand({ light, small }) { return <div className="flex items-center gap-2"><LogoJJ size={small ? 32 : 38} /><div className={light ? "text-white" : ""}><div className="font-bold leading-tight">João Jorge</div><div className="text-[10px] sm:text-xs leading-tight" style={{ color: light ? "#9FCBAF" : "#64748B" }}>Comitê · 2026</div></div></div>; }
+function Brand({ light, small }) { return <div className="min-w-0 flex items-center gap-2"><LogoJJ size={small ? 32 : 38} /><div className={`min-w-0 ${light ? "text-white" : ""}`}><div className="truncate font-bold leading-tight">João Jorge</div><div className="truncate text-[10px] sm:text-xs leading-tight" style={{ color: light ? "#9FCBAF" : "#64748B" }}>Comitê · 2026</div></div></div>; }
 const cyNome = (texto) => texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 function NavItem({ icon: Ic, label, active, onClick }) { return <button data-cy={`nav-${cyNome(label)}`} onClick={onClick} className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-white/10" style={active ? { background: "rgba(255,255,255,.12)", color: "#fff" } : { color: "#B8D8C2" }}><Ic size={18} /> {label}</button>; }
-function Tab({ icon: Ic, label, active, onClick }) { return <button data-cy={`tab-${cyNome(label)}`} onClick={onClick} className="py-2 flex flex-col items-center justify-center gap-1 text-[10px] font-medium transition-colors hover:bg-slate-50" style={{ color: active ? G : "#94A3B8" }}><Ic size={active ? 22 : 20} className="transition-all duration-300" /> {label}</button>; }
+function Tab({ icon: Ic, label, active, onClick }) { return <button data-cy={`tab-${cyNome(label)}`} onClick={onClick} aria-current={active ? "page" : undefined} className="min-w-0 min-h-16 py-2 px-1 flex flex-col items-center justify-center gap-1 text-[10px] font-medium leading-none transition-colors hover:bg-slate-50" style={{ color: active ? G : "#94A3B8" }}><Ic size={active ? 22 : 20} className="shrink-0 transition-all duration-300" /> <span className="max-w-full truncate">{label}</span></button>; }
 function PageTitle({ title, sub }) { return <div className="mb-4"><h1 className="text-2xl font-extrabold text-slate-900">{title}</h1><p className="text-xs sm:text-sm text-slate-500">{sub}</p></div>; }
 function Kpi({ label, value, hint, accent = "#0F172A" }) { return <div className="bg-white rounded-2xl border border-slate-200 p-3 sm:p-4 shadow-sm min-w-0 flex flex-col justify-center"><div className="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wide truncate">{label}</div><div className="text-[1.5rem] sm:text-2xl md:text-3xl font-extrabold mt-1 truncate" style={{ color: accent }} title={value}>{value}</div>{hint && <div className="text-[10px] sm:text-xs text-slate-400 mt-0.5 truncate">{hint}</div>}</div>; }
 function Card({ children }) { return <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">{children}</div>; }
