@@ -210,7 +210,7 @@ export default function App() {
   return (
     <div style={{ ...FONT, background: G_CANVAS }} className="min-h-[100dvh] text-slate-900 flex">
       {FONTS}
-      <aside className="hidden md:flex w-60 shrink-0 flex-col p-4" style={{ background: G_DARK }}>
+      <aside className="hidden lg:flex w-60 shrink-0 flex-col p-4" style={{ background: G_DARK }}>
         <Brand light />
         <nav className="mt-6 space-y-1">
           <NavItem icon={LayoutDashboard} label="Painel" active={page === "dashboard"} onClick={() => navegar("dashboard")} />
@@ -222,13 +222,13 @@ export default function App() {
         <div className="mt-auto text-xs" style={{ color: "#8FBF9F" }}>João Jorge · 2026</div>
       </aside>
 
-      <main className="flex-1 min-w-0 min-h-[100dvh] pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0 md:h-screen overflow-y-auto relative flex flex-col">
-        <header className="md:hidden sticky top-0 z-10 shrink-0 px-3 py-3 flex items-center justify-between gap-3 shadow-sm" style={{ background: G_DARK, paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}>
+      <main className="flex-1 min-w-0 min-h-[100dvh] pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-0 lg:h-screen overflow-y-auto relative flex flex-col">
+        <header className="lg:hidden sticky top-0 z-10 shrink-0 px-3 py-3 flex items-center justify-between gap-3 shadow-sm" style={{ background: G_DARK, paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}>
           <Brand light small />
           <button data-cy="sair-sistema" onClick={sair} aria-label="Sair do sistema" className="shrink-0 flex items-center gap-1.5 text-white/90 hover:text-white text-sm font-medium transition-colors">Sair <LogOut size={16} /></button>
         </header>
 
-        <div className="hidden md:flex justify-end p-4 shrink-0">
+        <div className="hidden lg:flex justify-end p-4 shrink-0">
           <button data-cy="sair-sistema" onClick={sair} className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-red-600 transition-colors bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm">Sair do sistema <LogOut size={16} /></button>
         </div>
 
@@ -238,7 +238,7 @@ export default function App() {
           </div>
         )}
 
-        <div className="w-full p-4 md:px-8 md:pt-4 md:pb-8 flex-1">
+        <div className="w-full p-4 lg:px-8 lg:pt-4 lg:pb-8 flex-1">
           {carregando && <div className="text-center text-sm text-slate-400 py-10">Carregando dados...</div>}
           {!carregando && page === "dashboard" && <Dashboard pessoas={pessoas} ativos={ativos} valores={valores} caixa={caixa} pagamentos={pagamentos} hide={painelOculto} onToggleHide={() => setPainelOculto((atual) => { const proximo = !atual; sessionStorage.setItem("painel-valores-visiveis", proximo ? "sim" : "nao"); return proximo; })} onEditCaixa={() => setCaixaOpen(true)} onEditSaidas={() => setSaidasOpen(true)} onEquipe={() => setPage("equipe")} />}
           {!carregando && page === "valores" && <Valores valores={valores} pessoas={pessoas} onNovo={() => { setValorPerson(null); setValorOpen(true); }} onDelete={excluirValor} onError={setGlobalError} />}
@@ -248,7 +248,7 @@ export default function App() {
         </div>
       </main>
 
-      <nav aria-label="Navegação principal" className="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 grid grid-cols-5 z-20 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] pb-[env(safe-area-inset-bottom)]">
+      <nav aria-label="Navegação principal" className="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 grid grid-cols-5 z-20 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] pb-[env(safe-area-inset-bottom)]">
         <Tab icon={LayoutDashboard} label="Painel" active={page === "dashboard"} onClick={() => navegar("dashboard")} />
         <Tab icon={Coins} label="Valores" active={page === "valores"} onClick={() => navegar("valores")} />
         <Tab icon={Wallet} label="Salário" active={page === "salario"} onClick={() => navegar("salario")} />
@@ -314,7 +314,7 @@ function Dashboard({ pessoas, ativos, valores, caixa, pagamentos, hide, onToggle
   return (
     <div>
       <PageTitle title="Painel" sub="Reflete os dados gerais do sistema" />
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
         <button data-cy="painel-entradas" onClick={onEditCaixa} className="rounded-2xl border border-slate-200 p-3 sm:p-4 shadow-sm text-left transition-shadow hover:shadow-md" style={{ background: G_SOFT }}>
           <div className="flex items-center justify-between">
             <div className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide truncate" style={{ color: G_DARK }}>Entradas</div>
@@ -330,7 +330,7 @@ function Dashboard({ pessoas, ativos, valores, caixa, pagamentos, hide, onToggle
         <button data-cy="painel-sem-assinatura" onClick={onEquipe} className="text-left min-w-0 rounded-2xl transition-shadow hover:shadow-md"><Kpi label="Sem assinatura" value={semAssin} hint="doc do TSE" /></button>
       </div>
 
-      <div className="mt-4 grid md:grid-cols-2 gap-4">
+      <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <h3 className="font-semibold text-slate-800">Como o dinheiro saiu</h3>
           <p className="text-sm text-slate-500 mb-3">Cédulas, pix e outros.</p>
@@ -359,27 +359,29 @@ function DonutGastos({ fixo, variavel, hide }) {
   const pctFixo = total ? Math.round((fixo / total) * 100) : 0;
   const pctVariavel = total ? 100 - pctFixo : 0;
   const dados = [{ nome: "Salário fixo", valor: fixo, cor: G, sombra: "#00652B" }, { nome: "Variável", valor: variavel, cor: AZUL, sombra: "#1D4ED8" }];
+  const dadosGrafico = total ? dados : [{ nome: "Sem gastos", valor: 1, cor: "#E2E8F0", sombra: "#CBD5E1" }];
   const TooltipGastos = ({ active, payload }) => {
     if (!active || !payload?.length) return null;
     const item = payload[0].payload; const pct = total ? Math.round((item.valor / total) * 100) : 0;
     return <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-xl text-xs"><div className="font-bold text-slate-800">{item.nome}</div><div className="text-slate-500">{pct}% · {brl(item.valor)}</div></div>;
   };
-  return <div className="grid grid-cols-1 min-[500px]:grid-cols-[190px_minmax(0,1fr)] min-[500px]:items-center gap-3">
-    <div className="h-44 w-full max-w-[220px] mx-0 shrink-0">
+  return <div className="grid grid-cols-1 lg:grid-cols-[210px_minmax(0,1fr)] lg:items-center gap-4">
+    <div className="relative h-56 w-full max-w-[280px] mx-auto shrink-0">
       <ResponsiveContainer width="100%" height="100%"><PieChart>
-        <Pie data={dados} dataKey="valor" cx="50%" cy="53%" outerRadius={70} paddingAngle={2} stroke="none" isAnimationActive={false}>
-          {dados.map((item) => <Cell key={item.nome} fill={item.sombra} />)}
+        <Pie data={dadosGrafico} dataKey="valor" cx="50%" cy="52%" innerRadius={58} outerRadius={82} paddingAngle={total ? 2 : 0} stroke="none" isAnimationActive={false}>
+          {dadosGrafico.map((item) => <Cell key={item.nome} fill={item.sombra} />)}
         </Pie>
-        <Pie data={dados} dataKey="valor" nameKey="nome" cx="50%" cy="48%" outerRadius={70} paddingAngle={2} stroke="#FFFFFF" strokeWidth={1} isAnimationActive={false}>
-          {dados.map((item) => <Cell key={item.nome} fill={item.cor} />)}
+        <Pie data={dadosGrafico} dataKey="valor" nameKey="nome" cx="50%" cy="48%" innerRadius={58} outerRadius={82} paddingAngle={total ? 2 : 0} stroke="#FFFFFF" strokeWidth={1} isAnimationActive={false}>
+          {dadosGrafico.map((item) => <Cell key={item.nome} fill={item.cor} />)}
         </Pie>
         <Tooltip content={<TooltipGastos />} />
       </PieChart></ResponsiveContainer>
+      <div className="pointer-events-none absolute inset-0 grid place-items-center text-center"><div><div className="text-lg font-extrabold text-slate-800">{hide ? "••••" : brl(total)}</div><div className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{total ? "total gasto" : "sem gastos"}</div></div></div>
     </div>
-    <div className="grid grid-cols-2 min-[500px]:grid-cols-1 gap-2 w-full text-center min-[500px]:text-left">
+    <div className="grid grid-cols-1 gap-2 w-full text-left">
       <div className="border-l-4 border-emerald-600 rounded-r-lg bg-slate-50 py-2 px-2"><div className="text-xs font-bold text-slate-700">Salário fixo · {pctFixo}%</div><div className="text-xs text-slate-500 mt-0.5">{hide ? "••••" : brl(fixo)}</div></div>
       <div className="border-l-4 border-blue-600 rounded-r-lg bg-slate-50 py-2 px-2"><div className="text-xs font-bold text-slate-700">Variável · {pctVariavel}%</div><div className="text-xs text-slate-500 mt-0.5">{hide ? "••••" : brl(variavel)}</div></div>
-      <div className="col-span-2 min-[500px]:col-span-1 w-full flex items-center justify-between rounded-lg bg-slate-100 px-3 py-2"><span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Total gasto</span><span className="text-base font-extrabold text-slate-800">{hide ? "R$ ••••" : brl(total)}</span></div>
+      <div className="w-full flex items-center justify-between rounded-lg bg-slate-100 px-3 py-2"><span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Total gasto</span><span className="text-base font-extrabold text-slate-800">{hide ? "R$ ••••" : brl(total)}</span></div>
     </div>
   </div>;
 }
